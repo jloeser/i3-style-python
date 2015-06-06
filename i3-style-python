@@ -119,7 +119,7 @@ def main():
         print line
 
     if reload:
-        os.system('i3-msg reload')
+        os.system('i3-msg reload > /dev/null 2>&1')
 
 if __name__ == '__main__':
 
