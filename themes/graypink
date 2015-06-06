@@ -1,0 +1,44 @@
+# vim: filetype=yaml
+---
+meta:
+  description: 'graypink theme by Jan Löser <jloeser@suse.de>'
+window_colors:
+  focused:
+    border:           '#C9B5BD'
+    background:       '#C9B5BD'
+    text:             '#825969'
+    indicator:        '#dddddd'
+  focused_inactive:
+    border:           '#191919'
+    background:       '#191919'
+    text:             '#999999'
+    indicator:        '#292d2e'
+  unfocused:
+    border:           '#191919'
+    background:       '#191919'
+    text:             '#999999'
+    indicator:        '#292d2e'
+  urgent:
+    border:           '#CD989A'
+    background:       '#CD989A'
+    text:             '#2E3436'
+    indicator:        '#900000'
+bar_colors:
+  background:         '#101010'
+  statusline:         '#605C5A'
+  focused_workspace:
+    border:           '#101010'
+    background:       '#101010'
+    text:             '#B72F62'
+  active_workspace:
+    border:           '#5F5F5F'
+    background:       '#101010'
+    text:             '#101010'
+  inactive_workspace:
+    border:           '#101010'
+    background:       '#101010'
+    text:             '#5F5F5F'
+  urgent_workspace:
+    border:           '#2E3436'
+    background:       '#9A878F'
+    text:             '#FFFFFF'
