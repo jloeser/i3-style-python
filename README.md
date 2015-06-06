@@ -11,6 +11,10 @@ i3-style-python (inspired by [acrisci/i3-style](https://github.com/acrisci/i3-st
 
 ## Installing
 
+You need to install the 'PyYAML' package:
+
+    sudo pip2.7 install PyYAML
+
 Just download/clone [i3-style-python](https://raw.githubusercontent.com/jloeser/i3-style-python/master/i3-style-python) file.
 
 ## Usage
@@ -25,4 +29,3 @@ Check the `themes` directory for the list of built-in themes.
 
 * lines gets currently only replaced, so if there is e.g. no 'client.focused' line in the i3 config, it won't be set at all
 * generate yaml theme file out of current i3 config
-* read also '.yaml' files
