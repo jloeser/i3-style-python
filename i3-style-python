@@ -5,9 +5,13 @@
 # Published under the GNU Public Licence 2
 import sys
 import os
-import yaml
 import fileinput
 import re
+try:
+    import yaml
+except ImportError:
+    sys.stderr.write("'PyYAML' package needed. Try 'sudo pip2.7 install PyYAML'\n")
+    sys.exit(1)
 
 __AUTHOR__ = "jloeser@suse.de"
 __NAME__ = "i3-style-python"
