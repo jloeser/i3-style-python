@@ -108,7 +108,7 @@ def main():
 
     print "\nFound: %s\n" % theme.description
 
-    search_regex = "(%s.*?$)"
+    search_regex = "(%s .*?$)"
     for line in fileinput.input(config_file, inplace=True):
         for search, replace in theme.replacements.iteritems():
             line = re.sub((search_regex % search), replace, line.rstrip())
