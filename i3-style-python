@@ -131,7 +131,7 @@ if __name__ == '__main__':
             if arg in ['-t', '--theme']:
                 theme_file = sys.argv[i + 1]
     except IndexError:
-        sys.stderr.write("Argument(s) needs a value!\n" % arg)
+        sys.stderr.write("Argument(s) needs a value!\n")
         sys.exit(1)
 
     main()
