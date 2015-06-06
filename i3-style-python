@@ -1,0 +1,139 @@
+#!/usr/bin/python2
+# -*- coding: utf-8 -*-
+#
+# Author Jan Löser <jloeser@suse.de>
+# Published under the GNU Public Licence 2
+import sys
+import os
+import yaml
+import fileinput
+import re
+
+__AUTHOR__ = "jloeser@suse.de"
+__NAME__ = "i3-style-python"
+__VERSION__ = "1.0"
+
+reload = False
+theme_file = None
+config_file = '~/.i3/config'
+
+class Theme(object):
+
+    def __init__(self, yaml):
+        self._description = yaml["meta"]["description"]
+        self._yaml = yaml
+        self._replacements = None
+
+        # search for color definitions and replace them
+        if yaml.has_key('colors'):
+            self._col_values = yaml['colors']
+            self._replace_colors(yaml)
+
+    def _replace_colors(self, d):
+        for key in d.keys():
+            if isinstance(d[key], dict) and d[key].keys():
+                self._replace_colors(d[key])
+            if isinstance(d[key], str):
+                if d[key] in self._col_values.keys():
+                    d[key] = self._col_values[d[key]]
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def replacements(self):
+        if not self._replacements:
+            result = self._window_colors().copy()
+            result.update(self._bar_colors())
+            self._replacements = result
+        return self._replacements
+
+    def _window_colors(self):
+        result = {}
+        window_colors_template = "client.%(state)s %(border)s %(background)s %(text)s %(indicator)s"
+        for state in self._yaml['window_colors']:
+            self._yaml['window_colors'][state].update({'state': state})
+            result['client.' + state] = window_colors_template % self._yaml['window_colors'][state]
+        return result
+
+    def _bar_colors(self):
+        result = {}
+        bar_colors_template = "%(state)s %(border)s %(background)s %(text)s"
+        for state in self._yaml['bar_colors']:
+            if isinstance(self._yaml['bar_colors'][state], dict):
+                self._yaml['bar_colors'][state].update({'state': state})
+                result[state] = bar_colors_template % self._yaml['bar_colors'][state]
+            else:
+                result[state] = '%s %s ' % (state, self._yaml['bar_colors'][state])
+        return result
+
+def help():
+    print """{0} version {1}
+
+Usage: {0} -t|--theme THEME [options]
+
+OPTIONS:
+    -h, --help                  Show help and exit
+    -r, --reload                Apply theme and restart i3
+    -c, --config-file FILENAME  Use the i3 configuration under FILENAME
+
+""".format(__NAME__, __VERSION__)
+
+def main():
+    global config_file, theme_file
+
+    config_file = os.path.expanduser(config_file)
+
+    if not theme_file:
+        sys.stderr.write("No theme specified!\n")
+        sys.exit(1)
+    print config_file
+    if not os.path.exists(config_file):
+        sys.stderr.write("Couldn't find config file!\n")
+        sys.exit(1)
+    if not os.path.exists(theme_file):
+        theme_file = './themes/' + theme_file
+        if not os.path.exists(theme_file):
+            sys.stderr.write("Couldn't find theme file!\n")
+            sys.exit(1)
+
+    try:
+        fd_theme = open(theme_file, 'r')
+        theme = Theme(yaml.load(fd_theme))
+    except IOError:
+        sys.stderr.write("Can't read theme file!")
+    finally:
+        fd_theme.close()
+
+    print "\nFound: %s\n" % theme.description
+
+    search_regex = "(%s.*?$)"
+    for line in fileinput.input(config_file, inplace=True):
+        for search, replace in theme.replacements.iteritems():
+            line = re.sub((search_regex % search), replace, line.rstrip())
+        print line
+
+    if reload:
+        os.system('i3-msg reload')
+
+if __name__ == '__main__':
+
+    try:
+        for i, arg in enumerate(sys.argv):
+            if arg in ['-h', '--help'] or len(sys.argv) == 1:
+                help()
+                sys.exit(0)
+            if arg in ['-r', '--reload']:
+                reload = True
+            if arg in ['-c', '--config-file']:
+                config_file = sys.argv[i + 1]
+            if arg in ['-t', '--theme']:
+                theme_file = sys.argv[i + 1]
+    except IndexError:
+        sys.stderr.write("Argument(s) needs a value!\n" % arg)
+        sys.exit(1)
+
+    main()
+else:
+    sys.stderr.write("Can't be imported. Not a module!\n")
