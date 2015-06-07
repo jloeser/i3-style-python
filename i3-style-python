@@ -7,6 +7,7 @@ import sys
 import os
 import fileinput
 import re
+import shutil
 try:
     import yaml
 except ImportError:
@@ -18,6 +19,7 @@ __NAME__ = "i3-style-python"
 __VERSION__ = "1.0"
 
 reload = False
+backup = True
 theme_file = None
 config_file = '~/.i3/config'
 
@@ -75,12 +77,13 @@ class Theme(object):
 def help():
     print """{0} version {1}
 
-Usage: {0} -t|--theme THEME [options]
+Usage: {0} -t|--theme FILENAME [options]
 
 OPTIONS:
     -h, --help                  Show help and exit
     -r, --reload                Apply theme and restart i3
     -c, --config-file FILENAME  Use the i3 configuration under FILENAME
+    -n, --no-backup             Disable backup of configuration file
 
 """.format(__NAME__, __VERSION__)
 
@@ -92,7 +95,6 @@ def main():
     if not theme_file:
         sys.stderr.write("No theme specified!\n")
         sys.exit(1)
-    print config_file
     if not os.path.exists(config_file):
         sys.stderr.write("Couldn't find config file!\n")
         sys.exit(1)
@@ -112,6 +114,10 @@ def main():
 
     print "\nFound: %s\n" % theme.description
 
+    # create backup
+    if backup:
+        shutil.copy(config_file, config_file + ".i3-style.backup")
+
     search_regex = r"(^( )*%s[ (\t)](.)*?$)"
     for line in fileinput.input(config_file, inplace=True):
         for search, replace in theme.replacements.iteritems():
@@ -130,6 +136,8 @@ if __name__ == '__main__':
                 sys.exit(0)
             if arg in ['-r', '--reload']:
                 reload = True
+            if arg in ['-n', '--no-backup']:
+                backup = False
             if arg in ['-c', '--config-file']:
                 config_file = sys.argv[i + 1]
             if arg in ['-t', '--theme']:
