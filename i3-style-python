@@ -55,7 +55,7 @@ class Theme(object):
 
     def _window_colors(self):
         result = {}
-        window_colors_template = "client.%(state)s %(border)s %(background)s %(text)s %(indicator)s"
+        window_colors_template = "client.%(state)-24s %(border)s %(background)s %(text)s %(indicator)s"
         for state in self._yaml['window_colors']:
             self._yaml['window_colors'][state].update({'state': state})
             result['client.' + state] = window_colors_template % self._yaml['window_colors'][state]
@@ -63,13 +63,13 @@ class Theme(object):
 
     def _bar_colors(self):
         result = {}
-        bar_colors_template = "%(state)s %(border)s %(background)s %(text)s"
+        bar_colors_template = "%(state)-24s %(border)s %(background)s %(text)s"
         for state in self._yaml['bar_colors']:
             if isinstance(self._yaml['bar_colors'][state], dict):
                 self._yaml['bar_colors'][state].update({'state': state})
                 result[state] = bar_colors_template % self._yaml['bar_colors'][state]
             else:
-                result[state] = '%s %s ' % (state, self._yaml['bar_colors'][state])
+                result[state] = '%-24s %s ' % (state, self._yaml['bar_colors'][state])
         return result
 
 def help():
@@ -112,7 +112,7 @@ def main():
 
     print "\nFound: %s\n" % theme.description
 
-    search_regex = "(^( )*%s .*?$)"
+    search_regex = r"(^( )*%s[ (\t)](.)*?$)"
     for line in fileinput.input(config_file, inplace=True):
         for search, replace in theme.replacements.iteritems():
             line = re.sub((search_regex % search), replace, line.rstrip())
