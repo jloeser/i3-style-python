@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Author Jan Löser <jloeser@suse.de>
@@ -11,7 +11,9 @@ import shutil
 try:
     import yaml
 except ImportError:
-    sys.stderr.write("'PyYAML' package needed. Try 'sudo pip2.7 install PyYAML'\n")
+    sys.stderr.write(
+        "'PyYAML' package needed. Try 'pip3 install PyYAML'\n"
+    )
     sys.exit(1)
 
 __AUTHOR__ = "jloeser@suse.de"
@@ -31,7 +33,7 @@ class Theme(object):
         self._replacements = None
 
         # search for color definitions and replace them
-        if yaml.has_key('colors'):
+        if 'colors' in yaml.keys():
             self._col_values = yaml['colors']
             self._replace_colors(yaml)
 
@@ -75,7 +77,7 @@ class Theme(object):
         return result
 
 def help():
-    print """{0} version {1}
+    print("""{0} version {1}
 
 Usage: {0} -t|--theme FILENAME [options]
 
@@ -85,7 +87,7 @@ OPTIONS:
     -c, --config-file FILENAME  Use the i3 configuration under FILENAME
     -n, --no-backup             Disable backup of configuration file
 
-""".format(__NAME__, __VERSION__)
+""".format(__NAME__, __VERSION__))
 
 def main():
     global config_file, theme_file
@@ -112,7 +114,7 @@ def main():
     finally:
         fd_theme.close()
 
-    print "\nFound: %s\n" % theme.description
+    print("\nFound: {}\n".format(theme.description))
 
     # create backup
     if backup:
@@ -120,9 +122,9 @@ def main():
 
     search_regex = r"(^( )*%s[ (\t)](.)*?$)"
     for line in fileinput.input(config_file, inplace=True):
-        for search, replace in theme.replacements.iteritems():
+        for search, replace in theme.replacements.items():
             line = re.sub((search_regex % search), replace, line.rstrip())
-        print line
+        print(line)
 
     if reload:
         os.system('i3-msg reload > /dev/null 2>&1')
