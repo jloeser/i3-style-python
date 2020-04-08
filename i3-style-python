@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Author Jan Löser <jloeser@suse.de>
+# Author Jan Löser <jan.loeser@posteo.de>
 # Published under the GNU Public Licence 2
 import sys
 import os
@@ -16,7 +16,7 @@ except ImportError:
     )
     sys.exit(1)
 
-__AUTHOR__ = "jloeser@suse.de"
+__AUTHOR__ = "jan.loeser@posteo.de"
 __NAME__ = "i3-style-python"
 __VERSION__ = "1.0"
 
