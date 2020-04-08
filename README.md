@@ -13,7 +13,7 @@ i3-style-python (inspired by [acrisci/i3-style](https://github.com/acrisci/i3-st
 
 You need to install the 'PyYAML' package:
 
-    sudo pip2.7 install PyYAML
+    sudo pip3 install PyYAML
 
 Just download/clone [i3-style-python](https://raw.githubusercontent.com/jloeser/i3-style-python/master/i3-style-python) file.
 
