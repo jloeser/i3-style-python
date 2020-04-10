@@ -108,7 +108,7 @@ def main():
 
     try:
         fd_theme = open(theme_file, 'r')
-        theme = Theme(yaml.load(fd_theme))
+        theme = Theme(yaml.safe_load(fd_theme))
     except IOError:
         sys.stderr.write("Can't read theme file!")
     finally:
