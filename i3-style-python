@@ -5,6 +5,7 @@
 # Published under the GNU Public Licence 2
 import sys
 import os
+import datetime
 import fileinput
 import re
 import shutil
@@ -118,7 +119,8 @@ def main():
 
     # create backup
     if backup:
-        shutil.copy(config_file, config_file + ".i3-style.backup")
+        prefix = datetime.datetime.now().strftime(".backup-%F_%X")
+        shutil.copy(config_file, config_file + prefix)
 
     search_regex = r"(^( )*%s[ (\t)](.)*?$)"
     for line in fileinput.input(config_file, inplace=True):
