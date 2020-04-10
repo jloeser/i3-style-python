@@ -3,6 +3,7 @@
 #
 # Author Jan Löser <jan.loeser@posteo.de>
 # Published under the GNU Public Licence 2
+import argparse
 import sys
 import os
 import datetime
@@ -19,10 +20,6 @@ __AUTHOR__ = "jan.loeser@posteo.de"
 __NAME__ = "i3-style-python"
 __VERSION__ = "1.0"
 
-reload = False
-backup = True
-theme_file = None
-config_file = '~/.i3/config'
 
 class Theme(object):
 
@@ -75,27 +72,11 @@ class Theme(object):
                 result[state] = '%-24s %s ' % (state, self._yaml['bar_colors'][state])
         return result
 
-def help():
-    print("""{0} version {1}
 
-Usage: {0} -t|--theme FILENAME [options]
-
-OPTIONS:
-    -h, --help                  Show help and exit
-    -r, --reload                Apply theme and restart i3
-    -c, --config-file FILENAME  Use the i3 configuration under FILENAME
-    -n, --no-backup             Disable backup of configuration file
-
-""".format(__NAME__, __VERSION__))
-
-def main():
-    global config_file, theme_file
+def main(theme_file, reload=False, backup=True, config_file='~/.i3/config'):
 
     config_file = os.path.expanduser(config_file)
 
-    if not theme_file:
-        sys.stderr.write("No theme specified!\n")
-        sys.exit(1)
     if not os.path.exists(config_file):
         sys.stderr.write("Couldn't find config file!\n")
         sys.exit(1)
@@ -129,25 +110,28 @@ def main():
     if reload:
         os.system('i3-msg reload > /dev/null 2>&1')
 
+
 if __name__ == '__main__':
 
-    try:
-        for i, arg in enumerate(sys.argv):
-            if arg in ['-h', '--help'] or len(sys.argv) == 1:
-                help()
-                sys.exit(0)
-            if arg in ['-r', '--reload']:
-                reload = True
-            if arg in ['-n', '--no-backup']:
-                backup = False
-            if arg in ['-c', '--config-file']:
-                config_file = sys.argv[i + 1]
-            if arg in ['-t', '--theme']:
-                theme_file = sys.argv[i + 1]
-    except IndexError:
-        sys.stderr.write("Argument(s) needs a value!\n")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(add_help=False)
 
-    main()
+    parser.add_argument('-h', '--help', action='help',
+                    help="Show this help message and exit")
+
+    parser.add_argument('-t', '--theme', required=True, metavar='FILENAME',
+            help="Path to theme file")
+
+    parser.add_argument('-r', '--reload', action='store_true',
+            help="Apply theme and restart i3")
+
+    parser.add_argument('-n', '--no-backup', action='store_true',
+            help="Disable backup of i3 configuration file")
+
+    parser.add_argument('-c', '--config', metavar='FILENAME',
+            default='~/.i3/config',
+            help="Path to i3 config file (default: ~/.i3/config)")
+
+    args = parser.parse_args()
+    main(args.theme, args.reload, not args.no_backup, args.config)
 else:
     sys.stderr.write("Can't be imported. Not a module!\n")
