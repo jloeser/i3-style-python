@@ -12,9 +12,7 @@ import shutil
 try:
     import yaml
 except ImportError:
-    sys.stderr.write(
-        "'PyYAML' package needed. Try 'pip3 install PyYAML'\n"
-    )
+    sys.stderr.write("'PyYAML' package needed. Try 'pip3 install PyYAML.'\n")
     sys.exit(1)
 
 __AUTHOR__ = "jan.loeser@posteo.de"
