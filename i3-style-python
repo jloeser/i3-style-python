@@ -86,16 +86,16 @@ class Theme(object):
         return result
 
 
-def main(theme_file, reload=False, backup=True, config_file='~/.i3/config',
-        indentation=4*' '):
-
-    config_file = os.path.expanduser(config_file)
+def main(args):
+    indentation =  args.indentation.replace('\\t', '\t')
+    config_file = os.path.abspath(os.path.expanduser(args.config))
+    theme_file = os.path.abspath(os.path.expanduser(args.theme))
 
     if not os.path.exists(config_file):
         sys.stderr.write("Couldn't find config file!\n")
         sys.exit(1)
     if not os.path.exists(theme_file):
-        theme_file = './themes/' + theme_file
+        theme_file = './themes/' + args.theme
         if not os.path.exists(theme_file):
             sys.stderr.write("Couldn't find theme file!\n")
             sys.exit(1)
@@ -111,7 +111,7 @@ def main(theme_file, reload=False, backup=True, config_file='~/.i3/config',
     print("Applying \"%s\"" % theme.description)
 
     # create backup
-    if backup:
+    if not args.no_backup:
         prefix = datetime.datetime.now().strftime(".backup-%F_%X")
         shutil.copy(config_file, config_file + prefix)
 
@@ -154,7 +154,7 @@ def main(theme_file, reload=False, backup=True, config_file='~/.i3/config',
                     f.write("%(i)s%(i)s%(v)s\n" % {'i': indentation, 'v': value})
                 f.write("%(i)s}\n}\n" % {'i': indentation})
 
-    if reload:
+    if args.reload:
         os.system('i3-msg reload > /dev/null 2>&1')
 
 
@@ -184,8 +184,6 @@ if __name__ == '__main__':
                     configuration (e.g. '\\t'; default: 4*whitespace)")
 
     args = parser.parse_args()
-    indentation =  args.indentation.replace('\\t', '\t')
-
-    main(args.theme, args.reload, not args.no_backup, args.config, indentation)
+    main(args)
 else:
     sys.stderr.write("Can't be imported. Not a module!\n")
