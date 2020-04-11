@@ -19,7 +19,7 @@ except ImportError:
 
 __AUTHOR__ = "jan.loeser@posteo.de"
 __NAME__ = "i3-style-python"
-__VERSION__ = "1.0"
+__VERSION__ = "1.1"
 
 # Use the following string as fallback if e.g. 'child_border' key/value is not
 # set in the theme file. This could also be set to a valid hexadecimal color
