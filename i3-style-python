@@ -86,6 +86,32 @@ class Theme(object):
         return result
 
 
+def configure_dmenu(line, substitutions):
+    backup = line
+    try:
+        line = line.split('exec')
+        cmd = line[1].strip()
+        wrap = ''
+        if cmd[0] == cmd[-1] == '"':
+            cmd = cmd.strip('"')
+            wrap = '"'
+        elif cmd[0] == cmd[-1] == '\'':
+            cmd = cmd.strip('\'')
+            wrap = '\''
+        cmd = [x for x in re.split("( |\\\".*?\\\"|'.*?')", cmd) if x.strip()]
+        exclude = ['-nf','-nb', '-sb', '-sf']
+        cmd = [x for x in cmd if (x not in exclude) and (not x.startswith(('#','\'#','"#')))]
+        wrapper = '"%s"' if wrap == '\'' else '\'%s\''
+        cmd += ['-nf', wrapper % substitutions['client.unfocused'].split()[3]]
+        cmd += ['-nb', wrapper % substitutions['client.unfocused'].split()[2]]
+        cmd += ['-sf', wrapper % substitutions['client.focused'].split()[3]]
+        cmd += ['-sb', wrapper % substitutions['client.focused'].split()[2]]
+        return "%s exec %s%s%s\n" % (line[0].rstrip(), wrap, ' '.join(cmd), wrap)
+    except:
+        sys.stderr.write("Configuring dmenu failed - no changes\n")
+    return backup
+
+
 def main(args):
     indentation =  args.indentation.replace('\\t', '\t')
     config_file = os.path.abspath(os.path.expanduser(args.config))
@@ -124,6 +150,11 @@ def main(args):
     regex = r'((?<=[ \t])|(?<=^))%s[ \t]+#.*$'
     for line in fileinput.input(config_file, inplace=True):
         if not line.lstrip().startswith('#'):
+            if args.dmenu and re.match(r'^.*exec.*dmenu_run.*$', line):
+                line = configure_dmenu(line, theme.substitutions)
+                print(line, end='')
+                continue
+
             for key, substitution in theme.substitutions.items():
                 line, n = re.subn((regex % key), substitution, line)
                 if n > 0:
@@ -177,6 +208,10 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config', metavar='FILENAME',
             default='~/.i3/config',
             help="Path to i3 config file (default: ~/.i3/config)")
+
+    parser.add_argument('-d', '--dmenu', action='store_true',
+            default=False,
+            help="Set colors also for dmenu_run command")
 
     parser.add_argument('--indentation', metavar='STRING',
             default=4*' ',
