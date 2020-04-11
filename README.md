@@ -8,6 +8,9 @@ i3-style-python (inspired by [acrisci/i3-style](https://github.com/acrisci/i3-st
 
 * Easy to try out new themes right after you install.
 * Modifies your theme in place - extra template files are not needed.
+* Allows to apply the theme also to:
+  * dmenu (program launcher)
+  * passmenu (dmenu interface to password-store, a password manager)
 
 ## Installing
 
