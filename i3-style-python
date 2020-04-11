@@ -86,7 +86,7 @@ class Theme(object):
         return result
 
 
-def configure_dmenu(line, substitutions):
+def configure_xmenu(line, substitutions):
     backup = line
     try:
         line = line.split('exec')
@@ -108,7 +108,7 @@ def configure_dmenu(line, substitutions):
         cmd += ['-sb', wrapper % substitutions['client.focused'].split()[2]]
         return "%s exec %s%s%s\n" % (line[0].rstrip(), wrap, ' '.join(cmd), wrap)
     except:
-        sys.stderr.write("Configuring dmenu failed - no changes\n")
+        sys.stderr.write("Configuring Xmenu failed - no changes\n")
     return backup
 
 
@@ -151,7 +151,12 @@ def main(args):
     for line in fileinput.input(config_file, inplace=True):
         if not line.lstrip().startswith('#'):
             if args.dmenu and re.match(r'^.*exec.*dmenu_run.*$', line):
-                line = configure_dmenu(line, theme.substitutions)
+                line = configure_xmenu(line, theme.substitutions)
+                print(line, end='')
+                continue
+
+            if args.passmenu and re.match(r'^.*exec.*passmenu.*$', line):
+                line = configure_xmenu(line, theme.substitutions)
                 print(line, end='')
                 continue
 
@@ -212,6 +217,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dmenu', action='store_true',
             default=False,
             help="Set colors also for dmenu_run command")
+
+    parser.add_argument('-p', '--passmenu', action='store_true',
+            default=False,
+            help="Set colors also for passmenu command")
 
     parser.add_argument('--indentation', metavar='STRING',
             default=4*' ',
