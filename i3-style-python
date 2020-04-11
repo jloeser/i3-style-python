@@ -4,6 +4,7 @@
 # Author Jan Löser <jan.loeser@posteo.de>
 # Published under the GNU Public Licence 2
 import argparse
+from collections import defaultdict
 import sys
 import os
 import datetime
@@ -20,13 +21,18 @@ __AUTHOR__ = "jan.loeser@posteo.de"
 __NAME__ = "i3-style-python"
 __VERSION__ = "1.0"
 
+# Use the following string as fallback if e.g. 'child_border' key/value is not
+# set in the theme file. This could also be set to a valid hexadecimal color
+# code (e.g. '#ff0000') but may influence the appearance.
+color_fallback=''
 
 class Theme(object):
 
     def __init__(self, yaml):
         self._description = yaml["meta"]["description"]
         self._yaml = yaml
-        self._replacements = None
+        self._window_substitutions = None
+        self._bar_substitutions = None
 
         # search for color definitions and replace them
         if 'colors' in yaml.keys():
@@ -46,34 +52,42 @@ class Theme(object):
         return self._description
 
     @property
-    def replacements(self):
-        if not self._replacements:
-            result = self._window_colors().copy()
-            result.update(self._bar_colors())
-            self._replacements = result
-        return self._replacements
-
-    def _window_colors(self):
-        result = {}
-        window_colors_template = "client.%(state)-24s %(border)s %(background)s %(text)s %(indicator)s"
-        for state in self._yaml['window_colors']:
-            self._yaml['window_colors'][state].update({'state': state})
-            result['client.' + state] = window_colors_template % self._yaml['window_colors'][state]
+    def substitutions(self):
+        result = self.window_substitutions().copy()
+        result.update(self.bar_substitutions())
         return result
 
-    def _bar_colors(self):
+    def window_substitutions(self):
+        if self._window_substitutions:
+            return self._window_substitutions
+
         result = {}
-        bar_colors_template = "%(state)-24s %(border)s %(background)s %(text)s"
+        template = "client.%(state)-16s %(border)s %(background)s %(text)s %(indicator)s %(child_border)s"
+        for state in self._yaml['window_colors']:
+            _dict = defaultdict(lambda: color_fallback,
+                    {'state': state, **self._yaml['window_colors'][state]})
+            result['client.' + state] = (template % _dict).rstrip()
+        self._window_substitutions = result
+        return result
+
+    def bar_substitutions(self):
+        if self._bar_substitutions:
+            return self._bar_substitutions
+
+        result = {}
+        template = "%(state)-18s %(border)s %(background)s %(text)s"
         for state in self._yaml['bar_colors']:
             if isinstance(self._yaml['bar_colors'][state], dict):
                 self._yaml['bar_colors'][state].update({'state': state})
-                result[state] = bar_colors_template % self._yaml['bar_colors'][state]
+                result[state] = template % self._yaml['bar_colors'][state]
             else:
-                result[state] = '%-24s %s ' % (state, self._yaml['bar_colors'][state])
+                result[state] = '%-18s %s' % (state, self._yaml['bar_colors'][state])
+        self._bar_substitutions = result
         return result
 
 
-def main(theme_file, reload=False, backup=True, config_file='~/.i3/config'):
+def main(theme_file, reload=False, backup=True, config_file='~/.i3/config',
+        indentation=4*' '):
 
     config_file = os.path.expanduser(config_file)
 
@@ -94,18 +108,51 @@ def main(theme_file, reload=False, backup=True, config_file='~/.i3/config'):
     finally:
         fd_theme.close()
 
-    print("\nFound: {}\n".format(theme.description))
+    print("Applying \"%s\"" % theme.description)
 
     # create backup
     if backup:
         prefix = datetime.datetime.now().strftime(".backup-%F_%X")
         shutil.copy(config_file, config_file + prefix)
 
-    search_regex = r"(^( )*%s[ (\t)](.)*?$)"
+    found = [[], []]
+    # In order to match the correct substitution for 'inactive_workspace' and
+    # 'active_workspace' (the latter would also match the fromer: 'inACTIVE')
+    # we check if the precursor was eighter a whitespace, a tab or the start of
+    # string/line. We do also look for the first '#' following the key which
+    # very likely introducing the first hexacimal color code.
+    regex = r'((?<=[ \t])|(?<=^))%s[ \t]+#.*$'
     for line in fileinput.input(config_file, inplace=True):
-        for search, replace in theme.replacements.items():
-            line = re.sub((search_regex % search), replace, line.rstrip())
-        print(line)
+        if not line.lstrip().startswith('#'):
+            for key, substitution in theme.substitutions.items():
+                line, n = re.subn((regex % key), substitution, line)
+                if n > 0:
+                    if key.startswith('client.'):
+                        found[0].append(key)
+                    else:
+                        found[1].append(key)
+        print(line, end='')
+
+    missing = [[], []]
+    missing[0] = set(theme.window_substitutions()) - set(found[0])
+    missing[1] = set(theme.bar_substitutions()) - set(found[1])
+
+    if any(missing):
+        print("Configuration added at the end of the file")
+        with open(config_file, 'a') as f:
+            f.write("\n# added by https://github.com/jloeser/i3-style-python/\n")
+
+            substitutions = theme.window_substitutions()
+            for key in missing[0]:
+                f.write("%s\n" % substitutions[key])
+
+            substitutions = theme.bar_substitutions()
+            if missing[1]:
+                f.write("bar {\n%(i)scolors {\n" % {'i': indentation})
+                for key in missing[1]:
+                    value = substitutions[key]
+                    f.write("%(i)s%(i)s%(v)s\n" % {'i': indentation, 'v': value})
+                f.write("%(i)s}\n}\n" % {'i': indentation})
 
     if reload:
         os.system('i3-msg reload > /dev/null 2>&1')
@@ -131,7 +178,14 @@ if __name__ == '__main__':
             default='~/.i3/config',
             help="Path to i3 config file (default: ~/.i3/config)")
 
+    parser.add_argument('--indentation', metavar='STRING',
+            default=4*' ',
+            help="Use specified indentation for newly added bar color \
+                    configuration (e.g. '\\t'; default: 4*whitespace)")
+
     args = parser.parse_args()
-    main(args.theme, args.reload, not args.no_backup, args.config)
+    indentation =  args.indentation.replace('\\t', '\t')
+
+    main(args.theme, args.reload, not args.no_backup, args.config, indentation)
 else:
     sys.stderr.write("Can't be imported. Not a module!\n")

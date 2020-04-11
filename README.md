@@ -27,5 +27,4 @@ Check the `themes` directory for the list of built-in themes.
 
 ## TODO:
 
-* lines gets currently only replaced, so if there is e.g. no 'client.focused' line in the i3 config, it won't be set at all
 * generate yaml theme file out of current i3 config
