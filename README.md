@@ -28,6 +28,14 @@ Just call `i3-style-python` with the name of the theme you want to try and where
 
 Check the `themes` directory for the list of built-in themes.
 
-## TODO:
+## Behaviour
 
-* generate yaml theme file out of current i3 config
+The script parses every line of the specified (i3) configuration file and looks for corresponding "keys" using regular expressions which are setting the colors for i3's appearance. There are basically two units which can be configured: windows and taskbar(s).
+
+If no keys are found at all they get added at the end of the configuration file by the script. This is quite useful if you start with a fresh i3 configuration and don't have any color configuration set at all. The only flaw is to end up with multiple taskbars due to the nested (task)bar data structure. This would require a one-time manual merge.
+
+Feel free to move and rearrange the keys/lines in your configuration file. The inplace substitution allows a smooth change of i3's appearance with no additional artifacts as long as all keys are present -- even multiple times -- somewhere in the configuration file.
+
+Using the approach of parsing line by line with regular expressions is rather sufficient for this task, however it has some drawbacks towards a lexical analysis (e.g. nested (task)bar data structure). It may happen that the result will not be as expected under some circumstances - anyway using default backup options should save you from ending up with broken, modified i3 configuration. You use this script at your own risk!
+
+A nice tool for creating custom colorschemes is https://thomashunter.name/i3-configurator/.
